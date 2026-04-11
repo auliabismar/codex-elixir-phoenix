@@ -1,0 +1,84 @@
+# generated: 2026-04-11T11:53:18+07:00
+# last_updated: 2026-04-11T13:45:00+07:00
+# project: codex-elixir-phoenix
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: {project-root}/_bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-04-11T11:53:18+07:00
+last_updated: 2026-04-11T17:06:00+07:00
+project: codex-elixir-phoenix
+project_key: NOKEY
+tracking_system: file-system
+story_location: {project-root}/_bmad-output/implementation-artifacts
+
+development_status:
+  epic-1: in-progress
+  1-1-core-configuration-base-scaffold: done
+  1-2-cross-platform-install-scripts: done
+  1-3-environment-detection-session-validation: done
+  1-4-base-skill-registry-autodiscovery-framework: ready-for-dev
+  1-5-interactive-phx-intro-tutorial-skill: backlog
+  epic-1-retrospective: optional
+  epic-2: backlog
+  2-1-the-plan-markdown-state-machine-parser: backlog
+  2-2-the-phx-plan-capability-command: backlog
+  2-3-sequential-task-execution-with-phx-work: backlog
+  epic-2-retrospective: optional
+  epic-3: backlog
+  3-1-toml-agent-definition-model-tier-matrix: backlog
+  3-2-parallel-sub-agent-research-execution: backlog
+  3-3-contextual-reference-document-routing: backlog
+  3-4-automated-agent-learnings-extraction-phx-compound: backlog
+  epic-3-retrospective: optional
+  epic-4: backlog
+  4-1-iron-law-pretooluse-hook-gateway-architecture: backlog
+  4-2-built-in-data-type-protection-patterns: backlog
+  4-3-phoenix-liveview-architectural-guardrails: backlog
+  4-4-background-job-idempotency-guardrails: backlog
+  epic-4-retrospective: optional
+  epic-5: backlog
+  5-1-incremental-verification-loop-via-host-shell-phx-verify: backlog
+  5-2-multi-agent-semantic-review-phx-review: backlog
+  5-3-semantic-iron-law-judge-implementation: backlog
+  5-4-fully-autonomous-lifecycle-workflow-phx-full: backlog
+  epic-5-retrospective: optional
+  epic-6: backlog
+  6-1-tidewave-mcp-server-configuration-mount: backlog
+  6-2-introspection-led-debugging-sequences: backlog
+  6-3-graceful-mcp-degradation-architecture: backlog
+  epic-6-retrospective: optional
+  epic-7: backlog
+  7-1-the-52-test-pytest-iron-law-evaluation-suite: backlog
+  7-2-orchestration-concurrency-stress-testing: backlog
+  7-3-output-quality-benchmarking-harness: backlog
+  epic-7-retrospective: optional
