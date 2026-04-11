@@ -1,0 +1,72 @@
+{
+  "version": "1.0",
+  "description": "Upstream-derived sample reference routing",
+  "routes": [
+    {
+      "keywords": ["schema", "changeset", "migration", "ecto", "query", "preload", "multi", "repo", "transaction"],
+      "domain": "ecto",
+      "references": [
+        "changesets.md",
+        "queries.md",
+        "migrations.md",
+        "transactions.md"
+      ]
+    },
+    {
+      "keywords": ["liveview", "live_view", "live_component", "mount", "handle_event", "socket", "assign", "stream", "upload", "phx-"],
+      "domain": "liveview",
+      "references": [
+        "async-streams.md",
+        "forms-uploads.md",
+        "components.md",
+        "pubsub-navigation.md",
+        "js-interop.md"
+      ]
+    },
+    {
+      "keywords": ["controller", "plug", "router", "pipeline", "conn", "channel", "verified route", "verified routes", "scope", "context"],
+      "domain": "phoenix",
+      "references": [
+        "context-patterns.md",
+        "scopes-auth.md",
+        "routing-patterns.md",
+        "plug-patterns.md",
+        "json-api-patterns.md"
+      ]
+    },
+    {
+      "keywords": ["oban", "job", "worker", "queue", "perform", "cron", "backoff", "unique"],
+      "domain": "oban",
+      "references": [
+        "worker-patterns.md",
+        "queue-config.md",
+        "testing-patterns.md",
+        "oban-pro-basics.md"
+      ]
+    },
+    {
+      "keywords": ["test", "tests", "exunit", "mock", "mox", "doctest", "factory", "assert", "liveview test"],
+      "domain": "testing",
+      "references": [
+        "exunit-patterns.md",
+        "mox-patterns.md",
+        "liveview-testing.md",
+        "factory-patterns.md"
+      ]
+    },
+    {
+      "keywords": ["auth", "authentication", "authorization", "session", "csrf", "xss", "rate limit", "oauth", "token", "security"],
+      "domain": "security",
+      "references": [
+        "authentication.md",
+        "authorization.md",
+        "input-validation.md",
+        "security-headers.md",
+        "rate-limiting.md"
+      ]
+    }
+  ],
+  "fallback": {
+    "references": ["elixir-basics.md", "code-organization.md"]
+  }
+}

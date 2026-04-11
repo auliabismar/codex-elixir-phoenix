@@ -7,6 +7,7 @@ for the implementer agent.
 
 from pathlib import Path
 import plan_state
+import reference_router
 
 
 class AmbiguityError(Exception):
@@ -60,7 +61,11 @@ def resolve_active_plan(repo_root: Path, slug: str = None) -> Path:
     return incomplete_plans[0]
 
 
-def get_work_context(plan_path: Path) -> dict:
+def get_work_context(
+    plan_path: Path,
+    repo_root: Path | None = None,
+    max_refs: int = 3,
+) -> dict:
     """Extract implementation context from a plan file.
 
     Returns a dictionary for the implementer agent.
@@ -82,8 +87,18 @@ def get_work_context(plan_path: Path) -> dict:
             "task": None,
             "task_index": None,
             "completed_tasks": [t["text"] for t in done],
+            "references": [],
+            "reference_block": "",
             "complete": True,
         }
+
+    reference_context = {"references": [], "reference_block": ""}
+    if repo_root is not None:
+        reference_context = reference_router.build_reference_context(
+            repo_root,
+            pending[0]["text"],
+            max_refs=max_refs,
+        )
 
     return {
         "plan_path": str(plan_path),
@@ -92,6 +107,7 @@ def get_work_context(plan_path: Path) -> dict:
         "task": pending[0]["text"],
         "task_index": pending[0]["index"],
         "completed_tasks": [t["text"] for t in done],
+        **reference_context,
         "complete": False,
     }
 

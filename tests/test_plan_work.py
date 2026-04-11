@@ -179,6 +179,55 @@ class TestGetWorkContext:
         assert ctx["completed_tasks"] == ["wrapped up"]
         assert ctx["complete"] is True
 
+    def test_includes_reference_context_when_repo_root_is_provided(self, repo_root, plan_factory):
+        references_dir = repo_root / ".codex" / "references"
+        (references_dir / "ecto").mkdir(parents=True, exist_ok=True)
+        (references_dir / "testing").mkdir(parents=True, exist_ok=True)
+        (references_dir / "routing.json").write_text(
+            textwrap.dedent(
+                """\
+                {
+                  "routes": [
+                    {
+                      "keywords": ["schema"],
+                      "domain": "ecto",
+                      "references": ["ecto-schema-basics.md"]
+                    },
+                    {
+                      "keywords": ["test"],
+                      "domain": "testing",
+                      "references": ["testing-basics.md"]
+                    }
+                  ],
+                  "fallback": {
+                    "references": ["elixir-basics.md", "code-organization.md"]
+                  }
+                }
+                """
+            ),
+            encoding="utf-8",
+        )
+        (references_dir / "ecto" / "ecto-schema-basics.md").write_text(
+            "# Ecto Schema Basics",
+            encoding="utf-8",
+        )
+        (references_dir / "testing" / "testing-basics.md").write_text(
+            "# Testing Basics",
+            encoding="utf-8",
+        )
+        (references_dir / "elixir-basics.md").write_text("# Elixir Basics", encoding="utf-8")
+        (references_dir / "code-organization.md").write_text(
+            "# Code Organization",
+            encoding="utf-8",
+        )
+        plan_path = plan_factory("auth", "## Tasks\n- [ ] add schema test")
+
+        ctx = get_work_context(plan_path, repo_root=repo_root, max_refs=3)
+
+        assert [ref["domain"] for ref in ctx["references"]] == ["ecto", "testing"]
+        assert "<reference" in ctx["reference_block"]
+        assert "<![CDATA[" in ctx["reference_block"]
+
     def test_ignores_heading_like_content_inside_fenced_blocks(self, repo_root, plan_factory):
         content = """\
         ## Goal
