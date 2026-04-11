@@ -45,9 +45,12 @@ yarn-error.log*
 _bmad/
 _bmad-output/
 .opencode/
+.gemini/
 
 # Python specific
 **/__pycache__/
+tests/__pycache__/
+/__pycache__/
 .pytest_cache/
 **/*.pyc
 **/*.pyo
