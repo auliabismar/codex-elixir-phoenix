@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.pnp.cjs
+.pnp.loader.mjs
+
+# Testing
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache
+**/test-results/
+**/playwright-report/
+**/blob-report/
+**/playwright/.cache
+
+# Production / Build
+/dist/
+/build/
+**/dist/
+**/build/
+
+# Misc
+.DS_Store
+*.pem
+*.key
+*.crt
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local configuration
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# Project specific (BMAD & Tooling)
+.agent/
+.agents/
+_bmad/
+_bmad-output/
+.opencode/
