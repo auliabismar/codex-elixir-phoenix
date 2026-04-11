@@ -1,6 +1,23 @@
 name = "planning-orchestrator"
-model = "gpt-5.4"
+model = "gpt-5.4-mini"
 sandbox_mode = true
+
+[parallel_spawn]
+enabled = true
+max_concurrent = 4
+timeout_seconds = 120
+
+[parallel_spawn.roles]
+ecto-schema-analyzer = "Analyzes Ecto schemas in lib/*/schema/*.ex and lib/*/*.ex for Ecto.Schema"
+phoenix-router-mapper = "Parses lib/*_web/router.ex to map endpoints and routes"
+liveview-component-scanner = "Parses lib/*_web/live/* for LiveView lifecycle hooks and components"
+dependency-auditor = "Parses mix.exs and mix.lock for version constraints and plugin support"
+
+[parallel_spawn.output_format]
+structure = "xml"
+wrapper = "<discovery role=\"{role}\">\n{content}\n</discovery>"
+aggregator = "plan_aggregator.py"
+
 instructions = """
 <role>
 You are the Planning Orchestrator, the architect responsible for transforming natural language feature requests into structured, actionable implementation plans. You oversee the 'Plan' phase of the lifecycle.
