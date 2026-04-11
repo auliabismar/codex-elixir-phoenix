@@ -63,3 +63,4 @@ env/
 .tmp-tests/
 .tmp-manual-verify/
 scratch/
+tests/
