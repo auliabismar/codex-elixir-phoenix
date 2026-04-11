@@ -1,1 +1,9 @@
-{}
+{
+  "SessionStart": [
+    {
+      "type": "script",
+      "path": "hooks/validate_session.py",
+      "runtime": "python"
+    }
+  ]
+}

@@ -45,3 +45,14 @@ yarn-error.log*
 _bmad/
 _bmad-output/
 .opencode/
+
+# Python specific
+**/__pycache__/
+.pytest_cache/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.venv/
+venv/
+env/
+.env/
