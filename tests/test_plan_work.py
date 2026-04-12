@@ -15,6 +15,7 @@ Covers:
 import sys
 import textwrap
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -22,7 +23,7 @@ import pytest
 HOOKS_DIR = Path(__file__).parent.parent / ".codex" / "hooks"
 sys.path.insert(0, str(HOOKS_DIR))
 
-from plan_work import (  # noqa: E402
+from plan_work import (  # type: ignore # noqa: E402
     AmbiguityError,
     complete_current_task,
     get_work_context,
@@ -260,7 +261,9 @@ class TestGetWorkContext:
 # ---------------------------------------------------------------------------
 
 class TestCompleteCurrentTask:
-    def test_marks_only_first_pending_task_and_advances_cycle(self, repo_root, plan_factory):
+    @patch("plan_work.validate_compilation.validate_project")
+    def test_marks_only_first_pending_task_and_advances_cycle(self, mock_validate, repo_root, plan_factory):
+        mock_validate.return_value = {"success": True, "error_type": None, "logs": None}
         content = """\
         ## Goal
 
@@ -290,7 +293,22 @@ class TestCompleteCurrentTask:
         assert "- [x] task 1" in p.read_text(encoding="utf-8")
         assert "- [ ] task 2" in p.read_text(encoding="utf-8")
 
-    def test_uses_plan_state_write_semantics_for_completion(self, repo_root):
+    @patch("plan_work.validate_compilation.validate_project")
+    def test_finds_repo_root_for_nested_plan_paths(self, mock_validate, repo_root):
+        mock_validate.return_value = {"success": True, "error_type": None, "logs": None}
+        plan_dir = repo_root / ".codex" / "plans" / "nested" / "child"
+        plan_dir.mkdir(parents=True)
+        plan_path = plan_dir / "plan.md"
+        plan_path.write_text("## Tasks\n- [ ] nested task", encoding="utf-8")
+
+        result = complete_current_task(plan_path)
+
+        assert result["completed"] is True
+        mock_validate.assert_called_once_with(repo_root)
+
+    @patch("plan_work.validate_compilation.validate_project")
+    def test_uses_plan_state_write_semantics_for_completion(self, mock_validate, repo_root):
+        mock_validate.return_value = {"success": True, "error_type": None, "logs": None}
         plan_dir = repo_root / ".codex" / "plans" / "line-endings"
         plan_dir.mkdir(parents=True)
         plan_path = plan_dir / "plan.md"
@@ -313,6 +331,7 @@ class TestCompleteCurrentTask:
         assert after == before.replace(b"- [ ] task 1", b"- [x] task 1", 1)
 
     def test_noops_when_plan_is_already_complete(self, repo_root, plan_factory):
+        # No need to mock validate_compilation here because it shouldn't be called if plan is complete
         p = plan_factory("done", "## Tasks\n- [x] wrapped up")
         before = p.read_bytes()
 
@@ -321,3 +340,20 @@ class TestCompleteCurrentTask:
         assert result["completed"] is False
         assert result["complete"] is True
         assert p.read_bytes() == before
+
+    @patch("plan_work.validate_compilation.validate_project")
+    def test_blocks_completion_on_verification_failure(self, mock_validate, repo_root, plan_factory):
+        mock_validate.return_value = {
+            "success": False,
+            "error_type": "compilation",
+            "logs": "Syntax error at line 42",
+        }
+        p = plan_factory("fail-check", "## Tasks\n- [ ] buggy task")
+
+        result = complete_current_task(p)
+
+        assert result["completed"] is False
+        assert result["error_type"] == "compilation"
+        assert "Syntax error" in result["logs"]
+        # Check that the file was NOT modified
+        assert "- [ ] buggy task" in p.read_text(encoding="utf-8")

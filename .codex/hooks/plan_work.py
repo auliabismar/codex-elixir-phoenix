@@ -8,6 +8,7 @@ for the implementer agent.
 from pathlib import Path
 import plan_state
 import reference_router
+import validate_compilation
 
 
 class AmbiguityError(Exception):
@@ -112,8 +113,15 @@ def get_work_context(
     }
 
 
-def complete_current_task(plan_path: Path, task_index: int | None = None) -> dict:
-    """Mark the first pending task complete, or report that the plan is already complete."""
+def complete_current_task(
+    plan_path: Path,
+    task_index: int | None = None,
+    repo_root: Path | None = None,
+) -> dict:
+    """Mark the first pending task complete, or report that the plan is already complete.
+
+    Includes an incremental verification loop via $phx-verify logic.
+    """
     pending = plan_state.find_first_pending(plan_path)
     if pending is None:
         return {
@@ -132,12 +140,32 @@ def complete_current_task(plan_path: Path, task_index: int | None = None) -> dic
             f"found {pending['index']}."
         )
 
+    # Verification Loop
+    if repo_root is None:
+        repo_root = _find_repo_root(plan_path)
+    else:
+        repo_root = Path(repo_root).resolve()
+
+    verification = validate_compilation.validate_project(repo_root)
+    if not verification["success"]:
+        return {
+            "plan_path": str(plan_path),
+            "completed": False,
+            "explanation": f"Verification failed: {verification['error_type']}",
+            "error_type": verification["error_type"],
+            "logs": verification["logs"],
+            "task": pending["text"],
+            "task_index": pending["index"],
+            "complete": False,
+        }
+
     plan_state.mark_task_complete(plan_path, pending["index"])
     next_pending = plan_state.find_first_pending(plan_path)
 
     return {
         "plan_path": str(plan_path),
         "completed": True,
+        "verification": "success",
         "task": pending["text"],
         "task_index": pending["index"],
         "next_task": next_pending["text"] if next_pending else None,
@@ -191,6 +219,23 @@ def _normalize_plan_candidate(candidate: Path) -> Path:
     if candidate.suffix != ".md":
         candidate = candidate / "plan.md"
     return candidate.resolve()
+
+
+def _find_repo_root(start_path: Path) -> Path:
+    probe = Path(start_path).resolve()
+    search_root = probe.parent if probe.is_file() else probe
+
+    if probe.is_file() and probe.name == "plan.md":
+        for parent in [search_root] + list(search_root.parents):
+            plans_root = parent / ".codex" / "plans"
+            if _is_relative_to(probe, plans_root):
+                return parent
+
+    for parent in [search_root] + list(search_root.parents):
+        if (parent / ".git").exists():
+            return parent
+
+    raise FileNotFoundError(f"Git repository not found for {start_path}")
 
 
 def _is_relative_to(path: Path, root: Path) -> bool:

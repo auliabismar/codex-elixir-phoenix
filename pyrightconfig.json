@@ -1,0 +1,12 @@
+{
+  "include": [
+    ".",
+    ".codex/hooks",
+    "tests"
+  ],
+  "extraPaths": [
+    ".codex/hooks"
+  ],
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true
+}
