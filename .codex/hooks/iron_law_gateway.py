@@ -50,6 +50,8 @@ class IronLawGateway:
         self.rule_registry = [
             {"module": "check_float_money", "name": "Float Money Detector"},
             {"module": "block_string_to_atom", "name": "Dynamic Atom Protector"},
+            {"module": "check_liveview_assign_new", "name": "LiveView assign_new Protector"},
+            {"module": "require_connected_mount", "name": "LiveView Connected Mount Enforcer"},
         ]
 
     def _violation(self, reasoning: str, correction: str) -> None:

@@ -60,7 +60,10 @@ venv/
 env/
 .env/
 
-.tmp-tests/
-.tmp-manual-verify/
+.tmp-*/
+*temp-*/
+plan-compound-*/
+pytest-*/
+.pytest-local/
 scratch/
-tests/
+test-run-*/

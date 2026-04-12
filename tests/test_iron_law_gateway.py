@@ -202,3 +202,32 @@ def test_gateway_allows_patch_that_replaces_string_to_atom():
     code, stdout, stderr = run_gateway(payload)
     assert code == 0
     assert stderr == ""
+
+def test_gateway_blocks_liveview_assign_new_volatile():
+    """Gateway should block volatile assign_new in LiveView targets."""
+    payload = {
+        "tool": "write_to_file",
+        "parameters": {
+            "TargetFile": "lib/my_app_web/live/data_live.ex",
+            "CodeContent": "assign_new(socket, :data, fn -> Repo.get(User, id) end)"
+        }
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 1
+    assert "IRON LAW VIOLATION" in stderr
+    assert "assign_new" in stderr
+
+def test_gateway_blocks_liveview_unguarded_mount():
+    """Gateway should block unguarded Repo calls in LiveView mount."""
+    payload = {
+        "tool": "write_to_file",
+        "parameters": {
+            "TargetFile": "lib/my_app_web/live/data_live.ex",
+            "CodeContent": "def mount(_params, _session, socket) do users = Repo.all(User) end"
+        }
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 1
+    assert "IRON LAW VIOLATION" in stderr
+    assert "connected?" in stderr
+
