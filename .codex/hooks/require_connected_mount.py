@@ -1,10 +1,10 @@
 import re
-from liveview_utils import _iter_candidate_content, _is_liveview
+import iron_law_utils
 
 # Story 4.3: Phoenix LiveView Architectural Guardrails - connected? mount enforcement
-# Contract: check(tool_name: str, params: dict, targets: list[str]) -> dict | None
+# Refactored to use iron_law_utils (Epic 4 Action Item)
 
-# Use a safer regex that doesn't greedily swallow or wrongly stop on first end
+# Use a safer regex for mount extraction
 MOUNT_PATTERN = re.compile(
     r"def\s+mount\s*\(\s*[^,]*\s*,\s*[^,]*\s*,\s*([a-zA-Z0-9_]+)\s*\)\s*do\b(.*?)(?=\ndef\s|$)",
     re.DOTALL
@@ -24,12 +24,9 @@ def _has_connected_guard(body, socket_name):
     guard_pattern = re.compile(rf"(if\s+connected\?\(\s*{socket_name}\s*\)|{socket_name}\s*\|>\s*connected\?\(\s*\))")
     return bool(guard_pattern.search(body))
 
-def check(tool_name, params, targets):
-    if not params:
-        return None
-        
-    for content in _iter_candidate_content(tool_name, params):
-        if not _is_liveview(content, targets):
+def check(tool_name: str, params: dict, targets: list[str]) -> dict | None:
+    for content in iron_law_utils.iter_candidate_content(tool_name, params):
+        if not iron_law_utils.is_liveview(content, targets):
             continue
 
         for socket_name, body in MOUNT_PATTERN.findall(content):

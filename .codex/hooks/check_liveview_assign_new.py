@@ -1,11 +1,10 @@
 import re
-from liveview_utils import _iter_candidate_content, _is_liveview
+import iron_law_utils
 
 # Story 4.3: Phoenix LiveView Architectural Guardrails - assign_new protection
-# Contract: check(tool_name: str, params: dict, targets: list[str]) -> dict | None
+# Refactored to use iron_law_utils (Epic 4 Action Item)
 
 # Simplified match that finds assign_new calls inside mount functions
-# Scope to mount/3: Look for def mount(...) do ... end
 MOUNT_PATTERN = re.compile(
     r"def\s+mount\b.*?\bdo\b(.*?)(?=\ndef\s|$)",
     re.DOTALL
@@ -17,7 +16,7 @@ ASSIGN_NEW_PATTERN = re.compile(
     re.DOTALL
 )
 
-# Volatile indicators: Repo calls, contexts that imply DB fetch, DateTime, random
+# Volatile indicators
 VOLATILE_INDICATORS = [
     r"Repo\.",
     r"\b[A-Z][a-zA-Z0-9_]*\.(list|search|paginate|load|fetch|get)_[a-zA-Z0-9_]+",
@@ -30,12 +29,9 @@ VOLATILE_INDICATORS = [
 
 VOLATILE_PATTERN = re.compile("|".join(VOLATILE_INDICATORS))
 
-def check(tool_name, params, targets):
-    if not params:
-        return None
-        
-    for content in _iter_candidate_content(tool_name, params):
-        if not _is_liveview(content, targets):
+def check(tool_name: str, params: dict, targets: list[str]) -> dict | None:
+    for content in iron_law_utils.iter_candidate_content(tool_name, params):
+        if not iron_law_utils.is_liveview(content, targets):
             continue
 
         # Look inside mount functions only
