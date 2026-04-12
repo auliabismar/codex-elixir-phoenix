@@ -46,8 +46,11 @@ class IronLawGateway:
 
     def __init__(self):
         # Register rule modules here in subsequent stories.
-        # Format: {"module": "rules.name", "class": "NameRule"}
-        self.rule_registry = []
+        # Format: {"module": "module_name", "description": "Human name"}
+        self.rule_registry = [
+            {"module": "check_float_money", "name": "Float Money Detector"},
+            {"module": "block_string_to_atom", "name": "Dynamic Atom Protector"},
+        ]
 
     def _violation(self, reasoning: str, correction: str) -> None:
         print(
@@ -193,19 +196,29 @@ class IronLawGateway:
         if not any(Path(target_file).suffix in [".ex", ".exs"] for target_file in target_files):
             sys.exit(0)
 
+        # Add current directory to path for dynamic imports
+        script_dir = str(Path(__file__).parent.absolute())
+        if script_dir not in sys.path:
+            sys.path.insert(0, script_dir)
+
         # Registry Dispatcher
         for rule_config in self.rule_registry:
             try:
-                # Import rule module dynamically
-                # Note: Later stories will add modules to .codex/hooks/rules/
                 module_name = rule_config.get("module")
                 if not module_name:
                     continue
 
-                # Hard failure on import errors as per AC
-                importlib.import_module(module_name)
-                # Dispatch check (contract to be defined by rule modules)
-                # module.check(payload)
+                # Import rule module
+                rule_module = importlib.import_module(module_name)
+                
+                # Dispatch check: check(tool_name, params, targets)
+                violation = rule_module.check(tool, params, target_files)
+                
+                if violation:
+                    self._violation(
+                        violation.get("reasoning", "Unknown reasoning"),
+                        violation.get("correction", "Unknown correction")
+                    )
 
             except ImportError:
                 print(
@@ -213,9 +226,9 @@ class IronLawGateway:
                     file=sys.stderr,
                 )
                 sys.exit(1)
-            except Exception:
+            except Exception as e:
                 print(
-                    f"IRON LAW VIOLATION: Gateway execution error in {rule_config.get('module')}. Require: Bug-free rule implementation.",
+                    f"IRON LAW VIOLATION: Gateway execution error in {rule_config.get('module')}: {str(e)}. Require: Bug-free rule implementation.",
                     file=sys.stderr,
                 )
                 sys.exit(1)

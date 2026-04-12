@@ -106,7 +106,99 @@ def test_gateway_malformed_tool_args_fail_closed():
 
 def test_gateway_rule_registry_exists():
     """Verify the class has a rule_registry attribute for later expansion."""
-    # We can't easily import the script directly if it has side effects on import,
-    # but we can check if it defines the attribute.
     content = GATEWAY_SCRIPT.read_text()
     assert "self.rule_registry =" in content
+
+def test_gateway_blocks_float_money():
+    """Gateway should terminate with error on :float amount."""
+    payload = {
+        "tool": "write_to_file",
+        "parameters": {
+            "TargetFile": "lib/schema.ex",
+            "CodeContent": "field :total_amount, :float"
+        }
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 1
+    assert "IRON LAW VIOLATION" in stderr
+    assert "total_amount" in stderr
+
+def test_gateway_blocks_float_money_in_new_content():
+    """Gateway should scan supported write-content keys beyond CodeContent."""
+    payload = {
+        "tool": "write_to_file",
+        "parameters": {
+            "TargetFile": "lib/schema.ex",
+            "new_content": "field :amount, :float"
+        }
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 1
+    assert "IRON LAW VIOLATION" in stderr
+    assert "amount" in stderr
+
+def test_gateway_blocks_float_money_in_migration_dsl():
+    """Gateway should block money floats in migrations as well as schemas."""
+    payload = {
+        "tool": "write_to_file",
+        "parameters": {
+            "TargetFile": "priv/repo/migrations/20260412000000_create_orders.exs",
+            "CodeContent": "add :price, :float"
+        }
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 1
+    assert "IRON LAW VIOLATION" in stderr
+    assert "price" in stderr
+
+def test_gateway_blocks_string_to_atom():
+    """Gateway should terminate with error on dynamic String.to_atom."""
+    payload = {
+        "tool": "replace_file_content",
+        "parameters": {
+            "TargetFile": "lib/app.ex",
+            "ReplacementContent": 'String.to_atom(user_input)'
+        }
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 1
+    assert "IRON LAW VIOLATION" in stderr
+    assert "String.to_existing_atom" in stderr
+
+def test_gateway_blocks_string_to_atom_in_new_str():
+    """Gateway should scan supported replace payload keys beyond ReplacementContent."""
+    payload = {
+        "tool": "replace_file_content",
+        "parameters": {
+            "TargetFile": "lib/app.ex",
+            "new_str": 'String.to_atom(user_input)'
+        }
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 1
+    assert "IRON LAW VIOLATION" in stderr
+    assert "String.to_existing_atom" in stderr
+
+def test_gateway_allows_patch_that_removes_float_money():
+    """Gateway should allow patches that remediate an existing float money field."""
+    payload = {
+        "tool": "apply_patch",
+        "parameters": {
+            "input": "*** Begin Patch\n*** Update File: lib/schema.ex\n@@\n-field :price, :float\n+field :price, :decimal\n*** End Patch\n"
+        }
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 0
+    assert stderr == ""
+
+def test_gateway_allows_patch_that_replaces_string_to_atom():
+    """Gateway should allow patches that remediate unsafe atom conversion."""
+    payload = {
+        "tool": "apply_patch",
+        "parameters": {
+            "input": "*** Begin Patch\n*** Update File: lib/app.ex\n@@\n-String.to_atom(user_input)\n+String.to_existing_atom(user_input)\n*** End Patch\n"
+        }
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 0
+    assert stderr == ""
