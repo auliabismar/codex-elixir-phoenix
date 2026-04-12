@@ -52,6 +52,7 @@ class IronLawGateway:
             {"module": "block_string_to_atom", "name": "Dynamic Atom Protector"},
             {"module": "check_liveview_assign_new", "name": "LiveView assign_new Protector"},
             {"module": "require_connected_mount", "name": "LiveView Connected Mount Enforcer"},
+            {"module": "require_oban_idempotency", "name": "Oban Idempotency Enforcer"},
         ]
 
     def _violation(self, reasoning: str, correction: str) -> None:

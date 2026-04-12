@@ -209,7 +209,7 @@ def test_gateway_blocks_liveview_assign_new_volatile():
         "tool": "write_to_file",
         "parameters": {
             "TargetFile": "lib/my_app_web/live/data_live.ex",
-            "CodeContent": "assign_new(socket, :data, fn -> Repo.get(User, id) end)"
+            "CodeContent": "def mount(_params, _session, socket) do\n  assign_new(socket, :data, fn -> Repo.get(User, id) end)\nend"
         }
     }
     code, stdout, stderr = run_gateway(payload)
@@ -231,3 +231,16 @@ def test_gateway_blocks_liveview_unguarded_mount():
     assert "IRON LAW VIOLATION" in stderr
     assert "connected?" in stderr
 
+def test_gateway_blocks_oban_worker_missing_unique():
+    """Gateway should terminate with error on Oban worker missing unique:."""
+    payload = {
+        "tool": "write_to_file",
+        "parameters": {
+            "TargetFile": "lib/my_app/workers/events_worker.ex",
+            "CodeContent": "defmodule EventsWorker do\n  use Oban.Worker, queue: :events\nend"
+        }
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 1
+    assert "IRON LAW VIOLATION" in stderr
+    assert "unique:" in stderr
