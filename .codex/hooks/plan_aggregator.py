@@ -64,11 +64,11 @@ class PlanAggregator:
         router_routes = {r for r in router_routes if len(r) > 2}
         liveview_components = {c for c in liveview_components if len(c) > 2}
 
-        for route in router_routes:
+        for route in sorted(router_routes):
             # Strip common suffixes and slashes for better matching
             route_base = route.lower().replace('_path', '').replace('_url', '').strip('/')
             
-            for component in liveview_components:
+            for component in sorted(liveview_components):
                 comp_base = component.lower().replace('live', '').replace('component', '').replace('view', '')
                 
                 # Heuristic mapping: if the bases share a significant slug

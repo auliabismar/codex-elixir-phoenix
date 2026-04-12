@@ -5,5 +5,12 @@
       "path": "hooks/validate_session.py",
       "runtime": "python"
     }
+  ],
+  "PreToolUse": [
+    {
+      "type": "script",
+      "path": "hooks/iron_law_gateway.py",
+      "runtime": "python"
+    }
   ]
 }

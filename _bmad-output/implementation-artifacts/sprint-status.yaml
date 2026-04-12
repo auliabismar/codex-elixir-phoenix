@@ -35,33 +35,33 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-11T11:53:18+07:00
-last_updated: 2026-04-12T15:14:00+07:00
+last_updated: 2026-04-12T18:47:47+07:00
 project: codex-elixir-phoenix
 project_key: NOKEY
 tracking_system: file-system
 story_location: {project-root}/_bmad-output/implementation-artifacts
 
 development_status:
-  epic-1: in-progress
+  epic-1: done
   1-1-core-configuration-base-scaffold: done
   1-2-cross-platform-install-scripts: done
   1-3-environment-detection-session-validation: done
   1-4-base-skill-registry-autodiscovery-framework: done
   1-5-interactive-phx-intro-tutorial-skill: done
   epic-1-retrospective: done
-  epic-2: in-progress
+  epic-2: done
   2-1-the-plan-markdown-state-machine-parser: done
   2-2-the-phx-plan-capability-command: done
   2-3-sequential-task-execution-with-phx-work: done
   epic-2-retrospective: done
-  epic-3: in-progress
+  epic-3: done
   3-1-toml-agent-definition-model-tier-matrix: done
   3-2-parallel-sub-agent-research-execution: done
   3-3-contextual-reference-document-routing: done
   3-4-automated-agent-learnings-extraction-phx-compound: done
-  epic-3-retrospective: optional
-  epic-4: backlog
-  4-1-iron-law-pretooluse-hook-gateway-architecture: backlog
+  epic-3-retrospective: done
+  epic-4: in-progress
+  4-1-iron-law-pretooluse-hook-gateway-architecture: done
   4-2-built-in-data-type-protection-patterns: backlog
   4-3-phoenix-liveview-architectural-guardrails: backlog
   4-4-background-job-idempotency-guardrails: backlog
