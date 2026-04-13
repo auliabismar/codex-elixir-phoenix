@@ -6,7 +6,7 @@ Deterministic pytest coverage for full-cycle orchestration and stop conditions.
 
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -65,6 +65,56 @@ class TestCoordinateLifecycle:
         assert result["plan_slug"] == "test-feature"
         assert result["task"] == "task 1"
         assert result["task_id"] == "test-feature:1"
+
+    @patch("plan_work.resolve_active_plan")
+    @patch("plan_work.get_work_context")
+    def test_recommends_introspection_for_stateful_tasks_after_threshold(self, mock_get_context, mock_resolve, repo_root, plan_path):
+        mock_resolve.return_value = plan_path
+        mock_get_context.return_value = {
+            "complete": False,
+            "task": "debug LiveView socket timeout",
+            "task_index": 1,
+            "reference_block": ""
+        }
+
+        result = coordinate_lifecycle(repo_root, consecutive_failures=2)
+
+        assert result["introspection_recommended"] is True
+        assert result["consecutive_failures"] == 2
+
+    @patch("plan_work.resolve_active_plan")
+    @patch("plan_work.get_work_context")
+    def test_does_not_recommend_introspection_for_generic_failures(self, mock_get_context, mock_resolve, repo_root, plan_path):
+        mock_resolve.return_value = plan_path
+        mock_get_context.return_value = {
+            "complete": False,
+            "task": "task 1",
+            "task_index": 1,
+            "reference_block": ""
+        }
+
+        result = coordinate_lifecycle(repo_root, consecutive_failures=2)
+
+        assert result["introspection_recommended"] is False
+
+    @patch("plan_work.resolve_active_plan")
+    @patch("plan_work.get_work_context")
+    def test_recommends_introspection_for_failure_context_keywords(self, mock_get_context, mock_resolve, repo_root, plan_path):
+        mock_resolve.return_value = plan_path
+        mock_get_context.return_value = {
+            "complete": False,
+            "task": "task 1",
+            "task_index": 1,
+            "reference_block": ""
+        }
+
+        result = coordinate_lifecycle(
+            repo_root,
+            consecutive_failures=2,
+            failure_context="GenServer timeout in handle_call during retry",
+        )
+
+        assert result["introspection_recommended"] is True
 
     @patch("plan_work.resolve_active_plan")
     @patch("plan_work.get_work_context")

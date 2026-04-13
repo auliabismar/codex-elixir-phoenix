@@ -5,6 +5,7 @@ Composes planning, work, verification, review, and compounding into a
 unified coordinator with a bounded recovery loop.
 """
 
+import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -21,10 +22,72 @@ import review_enforcement  # type: ignore
 import plan_compound  # type: ignore
 
 
+INTROSPECTION_FAILURE_KEYWORDS = (
+    "genserver",
+    "liveview",
+    "socket",
+    "process",
+    "racing",
+    "deadlock",
+    "timeout",
+    "cast",
+    "call",
+    "handle_info",
+    "handle_call",
+    "handle_cast",
+    "terminate",
+    "init",
+    "mailbox",
+    "state",
+)
+INTROSPECTION_TASK_KEYWORDS = (
+    "genserver",
+    "liveview",
+    "socket",
+    "process",
+    "racing",
+    "deadlock",
+    "timeout",
+    "handle_info",
+    "handle_call",
+    "handle_cast",
+    "mailbox",
+    "tidewave",
+)
+
+
+def _contains_keyword_match(context: Optional[str], keywords: tuple[str, ...]) -> bool:
+    if not context:
+        return False
+
+    lowered = context.lower()
+    for keyword in keywords:
+        pattern = rf"(?<![a-z0-9_]){re.escape(keyword)}(?![a-z0-9_])"
+        if re.search(pattern, lowered):
+            return True
+
+    return False
+
+
+def _should_recommend_introspection(
+    consecutive_failures: int,
+    task_text: Optional[str],
+    failure_context: Optional[str],
+) -> bool:
+    if consecutive_failures < 2:
+        return False
+
+    if _contains_keyword_match(failure_context, INTROSPECTION_FAILURE_KEYWORDS):
+        return True
+
+    return _contains_keyword_match(task_text, INTROSPECTION_TASK_KEYWORDS)
+
+
 def coordinate_lifecycle(
     repo_root: Path,
     target: Optional[str] = None,
     consecutive_failures: int = 0,
+    failure_context: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Coordinate the $phx-full autonomous lifecycle.
@@ -64,13 +127,20 @@ def coordinate_lifecycle(
                 "task": work_context["task"],
                 "task_index": work_context["task_index"]
             }
-            
+
+        introspection_recommended = _should_recommend_introspection(
+            consecutive_failures,
+            work_context.get("task"),
+            failure_context,
+        )
+
         return {
             "stage": "work",
             "status": "in-progress",
             "plan_slug": plan_slug,
             "plan_path": str(plan_path),
             "consecutive_failures": consecutive_failures,
+            "introspection_recommended": introspection_recommended,
             "task": work_context["task"],
             "task_index": work_context["task_index"],
             "task_id": f"{plan_slug}:{work_context['task_index']}",

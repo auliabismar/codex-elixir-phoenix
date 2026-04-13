@@ -24,6 +24,13 @@
       ]
     },
     {
+      "keywords": ["genserver", "liveview", "socket", "process", "racing", "deadlock", "timeout", "handle_info", "handle_call", "handle_cast", "mailbox", "tidewave", "trace"],
+      "domain": "introspection",
+      "references": [
+        "tidewave-playbook.md"
+      ]
+    },
+    {
       "keywords": ["controller", "plug", "router", "pipeline", "conn", "channel", "verified route", "verified routes", "scope", "context"],
       "domain": "phoenix",
       "references": [

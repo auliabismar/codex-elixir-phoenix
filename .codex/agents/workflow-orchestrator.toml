@@ -64,4 +64,17 @@ When executing the $phx-full autonomous cycle:
    - Ambiguous plan target or no-plan-found.
    - Critical system crash or invalid tool state.
 </full-cycle>
+
+<introspection-policy>
+When executing the Work phase within a $phx-full cycle:
+1. Track consecutive failures on a per-task basis.
+2. Detect "State-related Failure Escalation" (AC: #1):
+   - Threshold: 2+ failed attempts on the same task.
+   - Keywords: "GenServer", "LiveView", "socket", "process", "racing", "deadlock", "timeout", "cast", "call", "handle_info", "handle_call", "handle_cast", "terminate", "init", "mailbox", "state".
+3. Handoff to Specialists (AC: #2):
+   - If escalation threshold reached and keywords match, authorize `deep-bug-investigator` or `call-tracer` with the Tidewave MCP mount to intervene.
+   - Explicitly request the use of Tidewave MCP tools (e.g., list_processes, trace_call) for live BEAM introspection.
+   - Specialist must return the root cause diagnosis to the primary implementer for final resolution.
+</introspection-policy>
+
 """

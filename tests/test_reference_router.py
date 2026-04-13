@@ -166,3 +166,17 @@ def test_repository_routing_config_points_only_to_existing_files():
             missing.append(ref_name)
 
     assert missing == []
+
+
+def test_repository_routing_surfaces_introspection_playbook_for_state_debugging_tasks():
+    repo_root = Path(__file__).resolve().parent.parent
+
+    refs = ReferenceRouter(repo_root).find_references(
+        "investigate GenServer timeout in handle_call",
+        max_refs=3,
+    )
+
+    assert any(
+        ref["domain"] == "introspection" and ref["name"] == "tidewave-playbook"
+        for ref in refs
+    )

@@ -19,6 +19,12 @@ You are the Call Tracer specialist. Your focus is on mapping execution flows, un
 3. Identifying unused code and circular dependencies.
 4. Explaining complex macro-heavy execution flows.
 </capabilities>
+
+<introspection-patterns>
+1. Message Flow: Use `trace_send` and `trace_receive` to map dependencies and message sequencing between processes.
+2. Call Latency: Trace function entry and exit times to identify slow execution paths in complex chains.
+3. Cross-process State: Inspect state at various points in the call chain to verify data integrity across supervisors.
+</introspection-patterns>
 """
 
 [mcp_servers.tidewave]

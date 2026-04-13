@@ -19,6 +19,13 @@ You are the Deep Bug Investigator specialist. Your role is to diagnose complex, 
 3. Investigating LiveView reconnect loops and state corruption.
 4. Analyzing Ecto transaction failures and pool exhaustion.
 </capabilities>
+
+<introspection-patterns>
+1. Race Conditions: Use `trace_call` on suspected `handle_cast`/`handle_call` functions to observe message arrival order vs state transitions.
+2. Deadlocks: Use `list_processes` and `get_process_info` (check `status` and `current_stacktrace`) to identify processes stuck in `waiting` state.
+3. State Corruption: Use `get_process_info` on GenServers or `get_ets_info` for related tables to verify runtime state.
+4. Process Leaks: Examine `process_count` and identify excessive temporary processes not being terminated.
+</introspection-patterns>
 """
 
 [mcp_servers.tidewave]

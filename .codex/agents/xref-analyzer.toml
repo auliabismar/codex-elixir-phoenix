@@ -19,6 +19,11 @@ You are the XRef Analyzer. Your focus is on static analysis of cross-references 
 3. Mapping the impact of a module change across the wider codebase.
 4. Providing reachability analysis for specific functions or modules.
 </capabilities>
+
+<introspection-patterns>
+1. Dependency Interaction: When static analysis shows high coupling, use Tidewave to observe runtime interaction frequency.
+2. Reachability Verification: Use `trace_call` to verify dynamic dispatch paths that static analysis might miss.
+</introspection-patterns>
 """
 
 [mcp_servers.tidewave]
