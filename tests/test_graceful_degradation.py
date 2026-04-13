@@ -1,6 +1,8 @@
 import json
 import importlib.util
+import re
 import sys
+import uuid
 from pathlib import Path
 import pytest
 
@@ -20,8 +22,9 @@ def load_hook_module():
 @pytest.fixture
 def temp_project(request):
     LOCAL_TEMP_ROOT.mkdir(exist_ok=True)
-    project_dir = LOCAL_TEMP_ROOT / request.node.name
-    project_dir.mkdir(parents=True, exist_ok=True)
+    safe_name = re.sub(r"[^A-Za-z0-9_.-]+", "-", request.node.name).strip("-") or "temp-project"
+    project_dir = LOCAL_TEMP_ROOT / f"{safe_name}-{uuid.uuid4().hex[:8]}"
+    project_dir.mkdir(parents=True, exist_ok=False)
     
     # Create .codex directory
     (project_dir / ".codex").mkdir(exist_ok=True)
@@ -121,6 +124,28 @@ def test_plan_work_injects_tidewave_available(temp_project, monkeypatch):
     env_file.write_text(json.dumps({"tidewave_available": True}))
     context = plan_work.get_work_context(plan_file, repo_root=temp_project)
     assert context["tidewave_available"] is True
+
+
+@pytest.mark.parametrize(
+    "environment_body",
+    [
+        "[]",
+        json.dumps({"tidewave_available": "false"}),
+    ],
+)
+def test_plan_work_treats_invalid_tidewave_state_as_unknown(temp_project, environment_body):
+    import plan_work
+
+    plan_dir = temp_project / ".codex" / "plans" / "dummy"
+    plan_dir.mkdir(parents=True, exist_ok=True)
+    plan_file = plan_dir / "plan.md"
+    plan_file.write_text("## Goal\nTest\n## Tasks\n- [ ] Task 1\n")
+
+    env_file = temp_project / ".codex" / "environment.json"
+    env_file.write_text(environment_body, encoding="utf-8")
+
+    context = plan_work.get_work_context(plan_file, repo_root=temp_project)
+    assert context["tidewave_available"] is None
 
 def test_plan_full_coordinate_lifecycle_respects_tidewave_unavailable(temp_project, monkeypatch):
     import plan_full

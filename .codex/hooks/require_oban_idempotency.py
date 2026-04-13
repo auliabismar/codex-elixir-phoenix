@@ -24,8 +24,8 @@ def check(tool_name: str, params: dict, target_files: list[str]) -> dict | None:
     # Detect 'use Oban.Worker' in the added/modified content
     # Use the more robust is_oban_worker which should ideally use regex
     if iron_law_utils.is_oban_worker(code_without_comments):
-        # Ensure unique: [keys: ...] is present
-        if not re.search(r"unique\s*:\s*\[\s*keys\s*:", code_without_comments):
+        # Ensure unique: [keys: [...]] is present
+        if not re.search(r"unique\s*:\s*\[\s*.*?\bkeys\s*:\s*\[", code_without_comments, re.DOTALL):
             return {
                 "reasoning": "IRON LAW VIOLATION: Oban worker detected without idempotency protection. Missing 'unique: [keys: ...]' configuration.",
                 "correction": "Mandatory: add 'unique: [keys: [...], period: ...]' to your 'use Oban.Worker' statement to prevent duplicate job execution."

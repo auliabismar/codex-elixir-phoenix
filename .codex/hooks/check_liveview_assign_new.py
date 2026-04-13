@@ -25,6 +25,7 @@ VOLATILE_INDICATORS = [
     r"Time\.",
     r"[:.]rand\.",
     r"UUID\.",
+    r"Enum\.(random|take_random|shuffle)",
 ]
 
 VOLATILE_PATTERN = re.compile("|".join(VOLATILE_INDICATORS))

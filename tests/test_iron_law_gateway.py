@@ -179,6 +179,35 @@ def test_gateway_blocks_string_to_atom_in_new_str():
     assert "IRON LAW VIOLATION" in stderr
     assert "String.to_existing_atom" in stderr
 
+
+def test_gateway_blocks_dynamic_apply_string_to_atom():
+    """Gateway should terminate with error on dynamic apply(String, :to_atom, ...)."""
+    payload = {
+        "tool": "write_to_file",
+        "parameters": {
+            "TargetFile": "lib/app.ex",
+            "CodeContent": 'apply(String, :to_atom, [user_input])',
+        },
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 1
+    assert "IRON LAW VIOLATION" in stderr
+    assert "String.to_existing_atom" in stderr
+
+
+def test_gateway_allows_apply_string_to_atom_with_literal():
+    """Gateway should allow apply(String, :to_atom, ...) for fixed literals."""
+    payload = {
+        "tool": "write_to_file",
+        "parameters": {
+            "TargetFile": "lib/app.ex",
+            "CodeContent": 'apply(String, :to_atom, ["fixed"])',
+        },
+    }
+    code, stdout, stderr = run_gateway(payload)
+    assert code == 0
+    assert stderr == ""
+
 def test_gateway_allows_patch_that_removes_float_money():
     """Gateway should allow patches that remediate an existing float money field."""
     payload = {

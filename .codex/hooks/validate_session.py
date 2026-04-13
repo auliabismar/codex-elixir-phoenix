@@ -5,6 +5,7 @@ import subprocess
 import tomllib
 import json
 from pathlib import Path
+import iron_law_utils
 
 TIDEWAVE_TIMEOUT_SECONDS = 5
 
@@ -93,9 +94,8 @@ def validate():
     print(message)
     
     # 5. Persist environment state (STORY 6.3)
-    env_dir = cwd / ".codex"
-    env_dir.mkdir(parents=True, exist_ok=True)
-    env_file = env_dir / "environment.json"
+    env_file = iron_law_utils.get_env_path(cwd)
+    env_file.parent.mkdir(parents=True, exist_ok=True)
     
     env_data = {"tidewave_available": is_available}
     if env_file.exists():

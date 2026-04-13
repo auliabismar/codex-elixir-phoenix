@@ -8,6 +8,7 @@ MONEY_FIELD_TOKENS = {
     "balance",
     "cost",
     "fee",
+    "fees",
     "price",
     "subtotal",
     "total",
@@ -29,8 +30,10 @@ PATCH_CONTENT_KEYS = ("input", "patch", "content")
 #   field(:price, :float)
 #   add :price, :float
 #   modify :price, :float
+# Matches schema and migration DSL forms - handles comments and multiline
 FLOAT_FIELD_PATTERN = re.compile(
-    r"(?:field|add|modify)\s*\(?\s*:([a-zA-Z0-9_]+)\s*,\s*:float\b"
+    r"(?:field|add|modify)\s*\(?\s*:([a-zA-Z0-9_]+)\s*,\s*(?:#.*?\n\s*)*:float\b",
+    re.MULTILINE
 )
 
 

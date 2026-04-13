@@ -5,31 +5,18 @@ Encapsulates the logic for deterministic plan selection and context extraction
 for the implementer agent.
 """
 
-import json
 from pathlib import Path
 import plan_state
 import reference_router
 import validate_compilation
+import iron_law_utils
 
 
 def get_tidewave_availability(repo_root: Path) -> bool | None:
     """Return Tidewave availability, or None when the state is unknown."""
-    env_file = repo_root / ".codex" / "environment.json"
-    if not env_file.exists():
-        return None
-
-    try:
-        data = json.loads(env_file.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
-            return None
-
-        value = data.get("tidewave_available")
-        if isinstance(value, bool):
-            return value
-    except (json.JSONDecodeError, OSError):
-        return None
-
-    return None
+    data = iron_law_utils.load_env_data(repo_root)
+    value = data.get("tidewave_available")
+    return value if isinstance(value, bool) else None
 
 
 

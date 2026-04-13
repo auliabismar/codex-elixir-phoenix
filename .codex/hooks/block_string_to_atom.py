@@ -15,8 +15,12 @@ DIRECT_CONTENT_KEYS = (
 )
 PATCH_CONTENT_KEYS = ("input", "patch", "content")
 
-# Matches String.to_atom( ... )
-STRING_TO_ATOM_PATTERN = re.compile(r"String\.to_atom\s*\((.*?)\)", re.DOTALL)
+STRING_TO_ATOM_CALL_PATTERN = re.compile(r"String\.to_atom\s*\((.*?)\)", re.DOTALL)
+STRING_TO_ATOM_CAPTURE_PATTERN = re.compile(r"&String\.to_atom/1")
+APPLY_TO_ATOM_PATTERN = re.compile(
+    r"apply\s*\(\s*String\s*,\s*:to_atom\s*,\s*\[(.*?)\]\s*\)",
+    re.DOTALL,
+)
 
 
 def _iter_added_patch_lines(patch_text):
@@ -49,18 +53,29 @@ def _is_safe_literal(argument):
     )
 
 
+def _build_violation(expression):
+    return {
+        "reasoning": f"Unsafe dynamic atom creation detected in '{expression}' which can lead to memory exhaustion",
+        "correction": "Use String.to_existing_atom/1 or an explicit allowlist mapping to safe atoms",
+    }
+
+
 def check(tool_name, params, targets):
     """
     Inspects pending write payloads for unsafe String.to_atom usage.
     """
     for content in _iter_candidate_content(tool_name, params):
-        matches = STRING_TO_ATOM_PATTERN.findall(content)
-        for arg in matches:
+        for arg in STRING_TO_ATOM_CALL_PATTERN.findall(content):
             normalized_arg = arg.strip()
             if not _is_safe_literal(normalized_arg):
-                return {
-                    "reasoning": f"Unsafe dynamic atom creation detected in 'String.to_atom({normalized_arg})' which can lead to memory exhaustion",
-                    "correction": "Use String.to_existing_atom/1 or an explicit allowlist mapping to safe atoms",
-                }
+                return _build_violation(f"String.to_atom({normalized_arg})")
+
+        if STRING_TO_ATOM_CAPTURE_PATTERN.search(content):
+            return _build_violation("&String.to_atom/1")
+
+        for arg in APPLY_TO_ATOM_PATTERN.findall(content):
+            normalized_arg = arg.strip()
+            if not _is_safe_literal(normalized_arg):
+                return _build_violation(f"apply(String, :to_atom, [{normalized_arg}])")
 
     return None

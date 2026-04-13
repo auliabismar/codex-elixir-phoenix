@@ -48,6 +48,20 @@ def test_block_string_to_atom_in_new_str(rule_module):
     violation = rule_module.check("replace_file_content", {"new_str": content}, ["lib/app.ex"])
     assert violation is not None
 
+
+def test_block_dynamic_apply_string_to_atom(rule_module):
+    """Should block dynamic apply(String, :to_atom, ...) usage."""
+    content = 'apply(String, :to_atom, [user_input])'
+    violation = rule_module.check("write_to_file", {"CodeContent": content}, ["lib/app.ex"])
+    assert violation is not None
+
+
+def test_allow_apply_string_to_atom_with_literal(rule_module):
+    """Should allow apply(String, :to_atom, ...) for fixed literals."""
+    content = 'apply(String, :to_atom, ["fixed"])'
+    violation = rule_module.check("write_to_file", {"CodeContent": content}, ["lib/app.ex"])
+    assert violation is None
+
 def test_allow_patch_that_replaces_with_existing_atom(rule_module):
     """Should allow patches that remove unsafe atom conversion."""
     patch = '@@\n-String.to_atom(user_input)\n+String.to_existing_atom(user_input)'

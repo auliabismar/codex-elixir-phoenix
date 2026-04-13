@@ -1,5 +1,29 @@
 # Shared utilities for Iron Law hooks (Epic 4 Action Item)
+import json
 import re
+from pathlib import Path
+
+
+def get_env_path(repo_root: Path = None) -> Path:
+    """Return the absolute path to environment.json."""
+    if repo_root is None:
+        # Default to CWD, assuming Codex runs hooks from repo root
+        repo_root = Path.cwd()
+    return (repo_root / ".codex" / "environment.json").absolute()
+
+
+def load_env_data(repo_root: Path = None) -> dict:
+    """Load environment data from .codex/environment.json."""
+    path = get_env_path(repo_root)
+    if not path.exists():
+        return {}
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError, OSError):
+        return {}
+
+    return data if isinstance(data, dict) else {}
 
 # Detection Patterns
 USE_LIVE_VIEW_PATTERN = re.compile(
