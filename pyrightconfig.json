@@ -6,21 +6,9 @@
     "**/__pycache__"
   ],
   "extraPaths": [
-    "./.codex/hooks"
-  ],
-  "executionEnvironments": [
-    {
-      "root": ".codex/hooks",
-      "extraPaths": [
-        "."
-      ]
-    },
-    {
-      "root": "tests",
-      "extraPaths": [
-        "../.codex/hooks"
-      ]
-    }
+    ".",
+    "./.codex/hooks",
+    "./tests"
   ],
   "typeCheckingMode": "basic",
   "reportMissingImports": true

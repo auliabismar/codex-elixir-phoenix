@@ -16,6 +16,8 @@ Contract:
 import os
 import re
 import tempfile
+import time
+from contextlib import contextmanager
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -33,6 +35,41 @@ _INVALID_TASK_RE = re.compile(r"^- \[[^\]]\] ")
 def _load_lines(plan_path: Path) -> list[str]:
     """Read plan file and return UTF-8 lines with original newline bytes preserved."""
     return plan_path.read_bytes().decode("utf-8").splitlines(keepends=True)
+
+
+@contextmanager
+def _plan_lock(plan_path: Path, timeout: float = 10.0):
+    """Simple file-based lock with retry logic and stale lock detection."""
+    import json
+    import os
+    lock_path = plan_path.with_suffix(".lock")
+    start_time = time.time()
+    pid = os.getpid()
+    while True:
+        try:
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, json.dumps({"pid": pid, "timestamp": start_time}).encode())
+            os.close(fd)
+            break
+        except FileExistsError:
+            if time.time() - start_time > timeout:
+                try:
+                    with open(lock_path) as f:
+                        lock_data = json.load(f)
+                    if time.time() - lock_data.get("timestamp", 0) > timeout * 2:
+                        os.remove(lock_path)
+                        continue
+                except Exception:
+                    pass
+                raise TimeoutError(f"Could not acquire lock on {plan_path} after {timeout}s")
+            time.sleep(0.05)
+    try:
+        yield
+    finally:
+        try:
+            os.remove(lock_path)
+        except OSError as e:
+            raise RuntimeError(f"Failed to remove lock file: {e}")
 
 
 def _write_lines_atomic(plan_path: Path, lines: list[str]) -> None:
@@ -156,58 +193,48 @@ def find_most_recent_completed(plan_path: Path) -> dict | None:
 
 
 def mark_task_complete(plan_path: Path, task_index: int) -> None:
-    """Mark the task at line *task_index* as complete in-place.
+    """Mark the task at line *task_index* as complete in-place with concurrency safety."""
+    with _plan_lock(plan_path):
+        lines = _load_lines(plan_path)
+        _assert_task_index_in_range(lines, task_index)
 
-    Only the exact ``- [ ] `` prefix on that line is replaced with ``- [x] ``.
-    All surrounding markdown content, including blank lines, headings, and
-    non-task list items, is preserved byte-for-byte.
-
-    Args:
-        plan_path: Path to the plan.md file.
-        task_index: Zero-based line number of the pending task to mark done.
-
-    Raises:
-        FileNotFoundError: If *plan_path* does not exist.
-        ValueError: If the line at *task_index* is not a pending task line.
-    """
-    lines = _load_lines(plan_path)
-    _assert_task_index_in_range(lines, task_index)
-
-    line = lines[task_index]
-    if not _is_pending(line):
-        raise ValueError(
-            f"Line {task_index} is not a pending task line. "
-            f"Got: {line!r}"
-        )
-    lines[task_index] = _DONE_PREFIX + line[len(_PENDING_PREFIX):]
-    _write_lines_atomic(plan_path, lines)
+        line = lines[task_index]
+        if not _is_pending(line):
+            raise ValueError(
+                f"Line {task_index} is not a pending task line. "
+                f"Got: {line!r}"
+            )
+        lines[task_index] = _DONE_PREFIX + line[len(_PENDING_PREFIX):]
+        _write_lines_atomic(plan_path, lines)
 
 
 def reopen_task(plan_path: Path, task_index: int) -> None:
-    """Reopen the completed task at line *task_index* by restoring ``- [ ] ``."""
-    lines = _load_lines(plan_path)
-    _assert_task_index_in_range(lines, task_index)
+    """Reopen the completed task at line *task_index* with concurrency safety."""
+    with _plan_lock(plan_path):
+        lines = _load_lines(plan_path)
+        _assert_task_index_in_range(lines, task_index)
 
-    line = lines[task_index]
-    if not _is_done(line):
-        raise ValueError(
-            f"Line {task_index} is not a completed task line. "
-            f"Got: {line!r}"
-        )
+        line = lines[task_index]
+        if not _is_done(line):
+            raise ValueError(
+                f"Line {task_index} is not a completed task line. "
+                f"Got: {line!r}"
+            )
 
-    lines[task_index] = _PENDING_PREFIX + line[len(_DONE_PREFIX):]
-    _write_lines_atomic(plan_path, lines)
+        lines[task_index] = _PENDING_PREFIX + line[len(_DONE_PREFIX):]
+        _write_lines_atomic(plan_path, lines)
 
 
 def reopen_most_recent_completed(plan_path: Path) -> dict:
     """Reopen the highest-index completed task and return the reopened task metadata."""
-    latest = find_most_recent_completed(plan_path)
-    if latest is None:
-        raise ValueError("No completed task exists to reopen in the ## Tasks section.")
+    with _plan_lock(plan_path):
+        latest = find_most_recent_completed(plan_path)
+        if latest is None:
+            raise ValueError("No completed task exists to reopen in the ## Tasks section.")
 
-    reopen_task(plan_path, latest["index"])
-    return {
-        "index": latest["index"],
-        "text": latest["text"],
-        "done": False,
-    }
+        reopen_task(plan_path, latest["index"])
+        return {
+            "index": latest["index"],
+            "text": latest["text"],
+            "done": False,
+        }

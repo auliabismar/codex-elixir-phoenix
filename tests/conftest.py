@@ -11,7 +11,7 @@ import pytest
 
 # Story 7.1: Eval Harness Infrastructure
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 HOOKS_DIR = REPO_ROOT / ".codex" / "hooks"
 LOCAL_TEMP_ROOT = REPO_ROOT / ".tmp-evals"
 
@@ -97,6 +97,43 @@ def python_runner(repo_root):
         )
 
     return _run
+
+
+@pytest.fixture
+def stress_runner(python_runner):
+    """
+    Runner for concurrent execution of logic layers.
+    """
+    import concurrent.futures
+    import time
+    import random
+
+    def _run_parallel(
+        task_fn,
+        iterations: int = 10,
+        max_workers: int = 8,
+        jitter: tuple[float, float] = (0.1, 2.0),
+    ):
+        results = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = []
+            for i in range(iterations):
+                def wrapped_task(idx=i):
+                    if jitter:
+                        time.sleep(random.uniform(*jitter))
+                    return task_fn(idx)
+                
+                futures.append(executor.submit(wrapped_task))
+            
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    results.append(future.result())
+                except Exception as exc:
+                    results.append(exc)
+        
+        return results
+
+    return _run_parallel
 
 
 @pytest.fixture
