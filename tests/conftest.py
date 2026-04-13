@@ -148,3 +148,49 @@ def temp_project(request):
     (project_dir / ".codex").mkdir(exist_ok=True)
     yield project_dir
     shutil.rmtree(project_dir, ignore_errors=True)
+
+
+@pytest.fixture
+def agent_scope(repo_root):
+    """
+    Fixture to manage agent scoping.
+    'baseline': Plain environment without .codex hooks available to the agent.
+    'phoenix': Environment with .codex hooks registered and orchestration active.
+    """
+    created_dirs = []
+
+    def _apply_scope(scope_type: str, target_dir: Path):
+        if scope_type not in ("phoenix", "baseline"):
+            raise ValueError(f"Invalid scope_type: {scope_type}. Must be 'phoenix' or 'baseline'.")
+
+        codex_dest = target_dir / ".codex"
+
+        if scope_type == "phoenix":
+            src_codex = repo_root / ".codex"
+            if not src_codex.exists():
+                raise FileNotFoundError(f"Source .codex directory not found: {src_codex}")
+            if not src_codex.is_dir():
+                raise NotADirectoryError(f"Source .codex is not a directory: {src_codex}")
+            try:
+                if codex_dest.exists():
+                    shutil.rmtree(codex_dest)
+                shutil.copytree(src_codex, codex_dest, dirs_exist_ok=True)
+                created_dirs.append(codex_dest)
+            except (OSError, IOError) as e:
+                raise RuntimeError(f"Failed to copy .codex directory: {e}") from e
+        elif scope_type == "baseline":
+            try:
+                if codex_dest.exists():
+                    shutil.rmtree(codex_dest)
+                codex_dest.mkdir(parents=True)
+                created_dirs.append(codex_dest)
+            except (OSError, IOError) as e:
+                raise RuntimeError(f"Failed to create baseline .codex directory: {e}") from e
+
+    yield _apply_scope
+
+    for dir_path in created_dirs:
+        try:
+            shutil.rmtree(dir_path, ignore_errors=True)
+        except Exception:
+            pass

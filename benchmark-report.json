@@ -1,0 +1,97 @@
+{
+  "timestamp": "2026-04-13T20:30:27Z",
+  "results": [
+    {
+      "case_id": "COMPLEX_ECTO_PRELOAD",
+      "configuration": "baseline",
+      "success": false,
+      "latency_ms": 1.5559196472167969,
+      "cycles": 0,
+      "similarity_score": 0.996742671009772,
+      "verification_passed": false,
+      "compliance_passed": false,
+      "fidelity_score": 0.996742671009772,
+      "output": "defmodule MyApp.Repo.Preloads do\n  import Ecto.Query\n  defn preload_nested(query) do\n    query |> preload([:user, posts: [:comments, :author]])\n  end\nend\n",
+      "error": ""
+    },
+    {
+      "case_id": "COMPLEX_ECTO_PRELOAD",
+      "configuration": "phoenix",
+      "success": true,
+      "latency_ms": 1260.3340148925781,
+      "cycles": 1,
+      "similarity_score": 1.0,
+      "verification_passed": true,
+      "compliance_passed": true,
+      "fidelity_score": 1.0,
+      "output": "defmodule MyApp.Repo.Preloads do\n  import Ecto.Query\n  def preload_nested(query) do\n    query |> preload([:user, posts: [:comments, :author]])\n  end\nend\n",
+      "error": ""
+    },
+    {
+      "case_id": "LIVEVIEW_JS_HOOK",
+      "configuration": "baseline",
+      "success": false,
+      "latency_ms": 437.98208236694336,
+      "cycles": 0,
+      "similarity_score": 0.9969230769230769,
+      "verification_passed": false,
+      "compliance_passed": false,
+      "fidelity_score": 0.9969230769230769,
+      "output": "defmodule MyAppWeb.UserLive do\n  use MyAppWeb, :live_view\n  defn render(assigns) do\n    ~H\"\"\"\n    <div id=\"user-hook\" phx-hook=\"UserHook\"></div>\n    \"\"\"\n  end\nend\n",
+      "error": ""
+    },
+    {
+      "case_id": "LIVEVIEW_JS_HOOK",
+      "configuration": "phoenix",
+      "success": true,
+      "latency_ms": 1353.0495166778564,
+      "cycles": 1,
+      "similarity_score": 1.0,
+      "verification_passed": true,
+      "compliance_passed": true,
+      "fidelity_score": 1.0,
+      "output": "defmodule MyAppWeb.UserLive do\n  use MyAppWeb, :live_view\n  def render(assigns) do\n    ~H\"\"\"\n    <div id=\"user-hook\" phx-hook=\"UserHook\"></div>\n    \"\"\"\n  end\nend\n",
+      "error": ""
+    },
+    {
+      "case_id": "OBAN_IDEMPOTENT_WORKER",
+      "configuration": "baseline",
+      "success": false,
+      "latency_ms": 655.0719738006592,
+      "cycles": 0,
+      "similarity_score": 0.9975308641975309,
+      "verification_passed": false,
+      "compliance_passed": false,
+      "fidelity_score": 0.9975308641975309,
+      "output": "defmodule MyApp.Workers.ImportantTask do\n  use Oban.Worker, queue: :default, unique: [period: 60, fields: [:args, :worker]]\n  @impl Oban.Worker\n  defn perform(%Oban.Job{args: args}) do\n    :ok\n  end\nend\n",
+      "error": ""
+    },
+    {
+      "case_id": "OBAN_IDEMPOTENT_WORKER",
+      "configuration": "phoenix",
+      "success": true,
+      "latency_ms": 1354.7701835632324,
+      "cycles": 1,
+      "similarity_score": 1.0,
+      "verification_passed": true,
+      "compliance_passed": true,
+      "fidelity_score": 1.0,
+      "output": "defmodule MyApp.Workers.ImportantTask do\n  use Oban.Worker, queue: :default, unique: [period: 60, fields: [:args, :worker]]\n  @impl Oban.Worker\n  def perform(%Oban.Job{args: args}) do\n    :ok\n  end\nend\n",
+      "error": ""
+    }
+  ],
+  "summary": {
+    "baseline": {
+      "count": 3,
+      "success_rate": 0.0,
+      "avg_latency_ms": 364.86999193827313,
+      "avg_similarity": 0.9970655373767933
+    },
+    "phoenix": {
+      "count": 3,
+      "success_rate": 1.0,
+      "avg_latency_ms": 1322.7179050445557,
+      "avg_similarity": 1.0
+    }
+  }
+}
