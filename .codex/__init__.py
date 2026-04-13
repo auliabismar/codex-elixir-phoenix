@@ -1,0 +1,1 @@
+# Assists IDE module discovery

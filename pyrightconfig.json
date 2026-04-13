@@ -1,11 +1,26 @@
 {
   "include": [
-    ".",
-    ".codex/hooks",
-    "tests"
+    "**/*.py"
+  ],
+  "exclude": [
+    "**/__pycache__"
   ],
   "extraPaths": [
-    ".codex/hooks"
+    "./.codex/hooks"
+  ],
+  "executionEnvironments": [
+    {
+      "root": ".codex/hooks",
+      "extraPaths": [
+        "."
+      ]
+    },
+    {
+      "root": "tests",
+      "extraPaths": [
+        "../.codex/hooks"
+      ]
+    }
   ],
   "typeCheckingMode": "basic",
   "reportMissingImports": true
