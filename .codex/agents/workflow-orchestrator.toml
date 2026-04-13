@@ -44,4 +44,24 @@ When executing the Review phase:
 8. Keep semantic blockers separate from advisory findings by prepending a dedicated blocker
    section before the 4-domain checklist.
 </review-cycle>
+
+<full-cycle>
+When executing the $phx-full autonomous cycle:
+1. Coordinate plan creation/resolution, task execution, verification retries, review, and compounding.
+2. Budget: Allow up to 3 consecutive verification recovery failures before halting for manual intervention.
+3. Reset the recovery counter after each successful task completion (if the `task_id` returned by the coordinator changes, reset `consecutive_failures` to 0).
+4. Autonomous Loop:
+   - If no plan exists, run Planning phase.
+   - While plan has incomplete tasks:
+     - Run Work phase + Verify phase (mix compile).
+     - If verification fails, feed logs back into Work context and retry (up to budget).
+     - Mark task complete only after passing verification.
+   - Run Review phase + Semantic Judge.
+   - If semantic blocks or advisory findings exist, route back to Work phase.
+   - On clean review, run Compounding phase and persist learnings.
+5. Halt Reasons:
+   - Recovery budget exhausted (>3 consecutive failures on one task).
+   - Ambiguous plan target or no-plan-found.
+   - Critical system crash or invalid tool state.
+</full-cycle>
 """

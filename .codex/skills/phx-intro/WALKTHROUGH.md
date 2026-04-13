@@ -48,7 +48,15 @@ The framework gets smarter as you use it. When a feature is complete, run `$phx-
 - **Persistent Memory**: It extracts architectural patterns or project-specific quirks into `.codex/agent-memory/`.
 - **Avoid Repetition**: Future planning sessions will ingest this memory to avoid repeating past mistakes.
 
-## 6. Iron Laws: The Unbreakable Guardrails
+## 6. $phx-full: The Master Pilot
+
+Why manage the chain yourself? `$phx-full` glues the entire lifecycle into one unified, autonomous pipeline.
+
+- **Hands-Free Development**: It sequences `phx-plan -> loop(phx-work -> verify) -> phx-review -> phx-compound`.
+- **Autonomous Recovery**: It manages a retry budget (up to 3 consecutive failures) to fix compilation errors without bothering you.
+- **Safe & Sound**: It only halts if it hits the retry limit, encounters a critical system error, or requires manual intervention on an ambiguous plan.
+
+## 7. Iron Laws: The Unbreakable Guardrails
 
 The **Iron Laws** are the framework's defining feature. They prevent catastrophic production bugs before they even reach your disk.
 
@@ -61,5 +69,5 @@ The **Iron Laws** are the framework's defining feature. They prevent catastrophi
 ### Ready to start?
 
 Try running:
-`$phx-plan create a simple "Hello World" LiveView page`
-to see the planning phase in action!
+`$phx-full build a user authentication system with email verification`
+to see the entire autonomous machine in action!
