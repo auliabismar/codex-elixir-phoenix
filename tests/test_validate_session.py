@@ -75,7 +75,7 @@ def test_passes_with_phoenix_dependencies(temp_project, monkeypatch, capsys):
     monkeypatch.setattr(
         module,
         "detect_tidewave_status",
-        lambda timeout_seconds=module.TIDEWAVE_TIMEOUT_SECONDS: "Tidewave MCP: Server command is available (stub).",
+        lambda timeout_seconds=module.TIDEWAVE_TIMEOUT_SECONDS: ("Tidewave MCP: Server command is available (stub).", True),
     )
 
     exit_code, captured = run_validate(module, capsys)
@@ -104,7 +104,7 @@ def test_logs_tidewave_status(temp_project, monkeypatch, capsys):
     monkeypatch.setattr(
         module,
         "detect_tidewave_status",
-        lambda timeout_seconds=module.TIDEWAVE_TIMEOUT_SECONDS: "Tidewave MCP: Server command is available (stub).",
+        lambda timeout_seconds=module.TIDEWAVE_TIMEOUT_SECONDS: ("Tidewave MCP: Server command is available (stub).", True),
     )
 
     exit_code, captured = run_validate(module, capsys)
@@ -125,9 +125,10 @@ def test_detect_tidewave_status_probes_configured_server(monkeypatch):
 
     monkeypatch.setattr(module.subprocess, "run", fake_run)
 
-    status = module.detect_tidewave_status()
-
-    assert status == "Tidewave MCP: Server command is available (npx -y @tidewave/mcp-server)."
+    message, available = module.detect_tidewave_status()
+    
+    assert message == "Tidewave MCP: Server command is available (npx -y @tidewave/mcp-server)."
+    assert available is True
     assert calls == [
         (
             ["npx", "-y", "@tidewave/mcp-server", "--help"],
@@ -150,7 +151,8 @@ def test_detect_tidewave_status_times_out(monkeypatch):
 
     monkeypatch.setattr(module.subprocess, "run", fake_run)
 
-    status = module.detect_tidewave_status()
-
-    assert "timed out" in status
-    assert "Introspection will be limited." in status
+    message, available = module.detect_tidewave_status()
+    
+    assert "timed out" in message
+    assert available is False
+    assert "Introspection will be limited." in message

@@ -73,7 +73,11 @@ def _should_recommend_introspection(
     consecutive_failures: int,
     task_text: Optional[str],
     failure_context: Optional[str],
+    tidewave_available: Optional[bool] = None,
 ) -> bool:
+    if tidewave_available is False:
+        return False
+
     if consecutive_failures < 2:
         return False
 
@@ -132,6 +136,7 @@ def coordinate_lifecycle(
             consecutive_failures,
             work_context.get("task"),
             failure_context,
+            tidewave_available=work_context.get("tidewave_available"),
         )
 
         return {

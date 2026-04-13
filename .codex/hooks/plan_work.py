@@ -5,10 +5,32 @@ Encapsulates the logic for deterministic plan selection and context extraction
 for the implementer agent.
 """
 
+import json
 from pathlib import Path
 import plan_state
 import reference_router
 import validate_compilation
+
+
+def get_tidewave_availability(repo_root: Path) -> bool | None:
+    """Return Tidewave availability, or None when the state is unknown."""
+    env_file = repo_root / ".codex" / "environment.json"
+    if not env_file.exists():
+        return None
+
+    try:
+        data = json.loads(env_file.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return None
+
+        value = data.get("tidewave_available")
+        if isinstance(value, bool):
+            return value
+    except (json.JSONDecodeError, OSError):
+        return None
+
+    return None
+
 
 
 class AmbiguityError(Exception):
@@ -80,6 +102,10 @@ def get_work_context(
     pending = [t for t in tasks if not t["done"]]
     done = [t for t in tasks if t["done"]]
 
+    tidewave_available = None
+    if repo_root is not None:
+        tidewave_available = get_tidewave_availability(repo_root)
+
     if not pending:
         return {
             "plan_path": str(plan_path),
@@ -90,6 +116,7 @@ def get_work_context(
             "completed_tasks": [t["text"] for t in done],
             "references": [],
             "reference_block": "",
+            "tidewave_available": tidewave_available,
             "complete": True,
         }
 
@@ -109,6 +136,7 @@ def get_work_context(
         "task_index": pending[0]["index"],
         "completed_tasks": [t["text"] for t in done],
         **reference_context,
+        "tidewave_available": tidewave_available,
         "complete": False,
     }
 

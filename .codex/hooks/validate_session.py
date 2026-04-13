@@ -3,6 +3,7 @@ import sys
 import re
 import subprocess
 import tomllib
+import json
 from pathlib import Path
 
 TIDEWAVE_TIMEOUT_SECONDS = 5
@@ -28,7 +29,7 @@ def load_tidewave_command():
 def detect_tidewave_status(timeout_seconds=TIDEWAVE_TIMEOUT_SECONDS):
     command = load_tidewave_command()
     if not command:
-        return "Tidewave MCP: No Tidewave server configuration found. Introspection will be limited."
+        return "Tidewave MCP: No Tidewave server configuration found. Introspection will be limited.", False
 
     command_display = " ".join(command)
     probe_command = [*command, "--help"]
@@ -42,19 +43,20 @@ def detect_tidewave_status(timeout_seconds=TIDEWAVE_TIMEOUT_SECONDS):
             timeout=timeout_seconds,
         )
     except FileNotFoundError:
-        return f"Tidewave MCP: Transport command not found ({command[0]}). Introspection will be limited."
+        return f"Tidewave MCP: Transport command not found ({command[0]}). Introspection will be limited.", False
     except subprocess.TimeoutExpired:
         return (
             f"Tidewave MCP: Availability probe timed out for {command_display} "
-            f"after {timeout_seconds}s. Introspection will be limited."
+            f"after {timeout_seconds}s. Introspection will be limited.",
+            False
         )
     except OSError as exc:
-        return f"Tidewave MCP: Availability probe failed for {command_display} ({exc}). Introspection will be limited."
+        return f"Tidewave MCP: Availability probe failed for {command_display} ({exc}). Introspection will be limited.", False
 
     if result.returncode == 0:
-        return f"Tidewave MCP: Server command is available ({command_display})."
+        return f"Tidewave MCP: Server command is available ({command_display}).", True
 
-    return f"Tidewave MCP: Server command is unavailable ({command_display}). Introspection will be limited."
+    return f"Tidewave MCP: Server command is unavailable ({command_display}). Introspection will be limited.", False
 
 
 def validate():
@@ -87,7 +89,25 @@ def validate():
         sys.exit(1)
 
     # 4. Detect Tidewave MCP availability (STORY 6.1)
-    print(detect_tidewave_status())
+    message, is_available = detect_tidewave_status()
+    print(message)
+    
+    # 5. Persist environment state (STORY 6.3)
+    env_dir = cwd / ".codex"
+    env_dir.mkdir(parents=True, exist_ok=True)
+    env_file = env_dir / "environment.json"
+    
+    env_data = {"tidewave_available": is_available}
+    if env_file.exists():
+        try:
+            existing_data = json.loads(env_file.read_text(encoding="utf-8"))
+            if isinstance(existing_data, dict):
+                existing_data.update(env_data)
+                env_data = existing_data
+        except (json.JSONDecodeError, OSError):
+            pass
+            
+    env_file.write_text(json.dumps(env_data, indent=2), encoding="utf-8")
         
     print("Environment validation successful.")
     sys.exit(0)
