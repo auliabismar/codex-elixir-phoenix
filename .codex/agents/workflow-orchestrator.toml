@@ -31,11 +31,17 @@ When executing the Work phase:
 
 <review-cycle>
 When executing the Review phase:
-1. Build the review packet with `review_packet.collect_review_packet(repo_root)`.
+1. Build the review packet with `review_packet.collect_review_packet(repo_root, target=...)`.
 2. If packet `ready` is false, return the structured payload and stop without spawning reviewers.
 3. If packet `ready` is true, hand off the packet to `parallel-reviewer` for 4-domain fan-out.
 4. Require deterministic checklist synthesis through `review_aggregator.py`.
-5. Keep Story 5.2 boundary clean: review phase synthesizes findings only; do not perform
-   semantic rollback, completion-state reversal, or final Iron Law judgment in this phase.
+5. Run `iron-law-judge` as a separate semantic pass against the same diff packet.
+6. Normalize judge XML via `review_enforcement.normalize_judge_output(...)`.
+7. Enforce semantic rollback via `review_enforcement.enforce_semantic_gate(...)`:
+   - Reuse the exact `plan_binding` resolved in the review packet; do not resolve plan identity a second time during rollback.
+   - Reopen the highest line-index completed task in `## Tasks` when violation status is returned.
+   - Fail closed with structured `no-target`, `ambiguous-target`, or `no-completed-task` when binding is unsafe.
+8. Keep semantic blockers separate from advisory findings by prepending a dedicated blocker
+   section before the 4-domain checklist.
 </review-cycle>
 """

@@ -1,0 +1,143 @@
+{
+  "snapshot_date": "2026-04-13",
+  "provenance": [
+    "https://raw.githubusercontent.com/oliver-kriska/claude-elixir-phoenix/v2.8.0/README.md#iron-laws-non-negotiable-rules",
+    "https://raw.githubusercontent.com/oliver-kriska/claude-elixir-phoenix/main/plugins/elixir-phoenix/agents/iron-law-judge.md",
+    "https://raw.githubusercontent.com/oliver-kriska/claude-elixir-phoenix/main/plugins/elixir-phoenix/hooks/scripts/inject-iron-laws.sh"
+  ],
+  "notes": "This local snapshot is the canonical source for semantic judge evaluation. When wording differs from upstream workflow behavior, this repository's PRD, architecture, and story contracts remain authoritative.",
+  "laws": [
+    {
+      "number": 1,
+      "title": "No disconnected mount queries",
+      "category": "LiveView",
+      "wording": "NO database queries in disconnected mount -- use assign_async"
+    },
+    {
+      "number": 2,
+      "title": "Use streams for large lists",
+      "category": "LiveView",
+      "wording": "ALWAYS use streams for lists >100 items"
+    },
+    {
+      "number": 3,
+      "title": "Guard PubSub subscribe with connected?",
+      "category": "LiveView",
+      "wording": "CHECK connected?/1 before PubSub subscribe"
+    },
+    {
+      "number": 4,
+      "title": "No float money fields",
+      "category": "Ecto",
+      "wording": "NEVER use :float for money -- use :decimal or :integer (cents)"
+    },
+    {
+      "number": 5,
+      "title": "Pin query values",
+      "category": "Ecto",
+      "wording": "ALWAYS pin values with ^ in queries -- never interpolate user input"
+    },
+    {
+      "number": 6,
+      "title": "Correct association query shape",
+      "category": "Ecto",
+      "wording": "SEPARATE QUERIES for has_many, JOIN for belongs_to"
+    },
+    {
+      "number": 7,
+      "title": "Oban jobs are idempotent",
+      "category": "Oban",
+      "wording": "Jobs MUST be idempotent"
+    },
+    {
+      "number": 8,
+      "title": "Oban args use string keys",
+      "category": "Oban",
+      "wording": "Oban args use STRING keys"
+    },
+    {
+      "number": 9,
+      "title": "No structs in Oban args",
+      "category": "Oban",
+      "wording": "Never store structs in Oban args"
+    },
+    {
+      "number": 10,
+      "title": "No String.to_atom with user input",
+      "category": "Security",
+      "wording": "NO String.to_atom with user input -- atom exhaustion DoS"
+    },
+    {
+      "number": 11,
+      "title": "Authorize every handle_event",
+      "category": "Security",
+      "wording": "AUTHORIZE in EVERY LiveView handle_event"
+    },
+    {
+      "number": 12,
+      "title": "No raw/1 on untrusted input",
+      "category": "Security",
+      "wording": "NEVER use raw/1 with untrusted content -- XSS"
+    },
+    {
+      "number": 13,
+      "title": "No process without runtime reason",
+      "category": "OTP",
+      "wording": "NO process without runtime reason -- processes model concurrency/state/isolation"
+    },
+    {
+      "number": 14,
+      "title": "Supervise long-lived processes",
+      "category": "OTP",
+      "wording": "SUPERVISE ALL LONG-LIVED PROCESSES"
+    },
+    {
+      "number": 15,
+      "title": "No implicit cross joins",
+      "category": "Ecto",
+      "wording": "NO IMPLICIT CROSS JOINS -- from(a in A, b in B) without on: creates Cartesian product"
+    },
+    {
+      "number": 16,
+      "title": "Track compile-time files",
+      "category": "Elixir",
+      "wording": "@external_resource FOR COMPILE-TIME FILES"
+    },
+    {
+      "number": 17,
+      "title": "Dedup before cast_assoc",
+      "category": "Ecto",
+      "wording": "DEDUP BEFORE cast_assoc WITH SHARED DATA"
+    },
+    {
+      "number": 18,
+      "title": "Use hidden inputs for required embeds",
+      "category": "Phoenix",
+      "wording": "HIDDEN INPUTS FOR ALL REQUIRED EMBEDDED FIELDS"
+    },
+    {
+      "number": 19,
+      "title": "Wrap third-party APIs",
+      "category": "Elixir",
+      "wording": "WRAP THIRD-PARTY LIBRARY APIs behind project-owned modules"
+    },
+    {
+      "number": 20,
+      "title": "No attempt-guarded snooze loops",
+      "category": "Oban",
+      "wording": "Smart Engine workers must not combine {:snooze, _} retries with attempt-based guards that can loop forever"
+    },
+    {
+      "number": 21,
+      "title": "No assign_new for per-mount refresh values",
+      "category": "LiveView",
+      "wording": "NEVER use assign_new for values refreshed every mount"
+    },
+    {
+      "number": 22,
+      "title": "Verify before claiming done",
+      "category": "Verification",
+      "wording": "VERIFY BEFORE CLAIMING DONE -- run mix compile && mix test, never say should work"
+    }
+  ]
+}

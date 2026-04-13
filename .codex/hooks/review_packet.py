@@ -8,18 +8,22 @@ collects the current source diff packet for parallel semantic review.
 from pathlib import Path
 
 import plan_compound
+import review_enforcement
 import validate_compilation
 
 
-def collect_review_packet(repo_root: Path) -> dict:
+def collect_review_packet(repo_root: Path, target: str | Path | None = None) -> dict:
     """Return a fail-closed review packet for the current workspace diff."""
     repo_root = Path(repo_root).resolve()
+    plan_binding = review_enforcement.resolve_plan_binding(repo_root, target=target)
     verification = validate_compilation.validate_project(repo_root)
     base_packet = {
         "repo_root": str(repo_root),
         "git_diff": None,
         "source_diff_basis": plan_compound._SOURCE_DIFF_BASIS,
         "verification": verification,
+        "review_target": str(target).strip() if target is not None else None,
+        "plan_binding": plan_binding,
     }
 
     if not verification["success"]:

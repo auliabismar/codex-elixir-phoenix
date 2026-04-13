@@ -24,7 +24,14 @@ HOOKS_DIR = Path(__file__).parent.parent / ".codex" / "hooks"
 sys.path.insert(0, str(HOOKS_DIR))
 
 import plan_state  # noqa: E402
-from plan_state import load_tasks, find_first_pending, mark_task_complete  # noqa: E402
+from plan_state import (  # noqa: E402
+    find_first_pending,
+    find_most_recent_completed,
+    load_tasks,
+    mark_task_complete,
+    reopen_most_recent_completed,
+    reopen_task,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -437,3 +444,82 @@ class TestRepeatedCycles:
         pending = [t for t in tasks_after_restart if not t["done"]]
         assert len(pending) == 2
         assert pending[0]["text"] == "step two"
+
+
+# ---------------------------------------------------------------------------
+# find_most_recent_completed / reopen_most_recent_completed
+# ---------------------------------------------------------------------------
+
+class TestReopenMostRecentCompleted:
+    def test_finds_highest_index_completed_task(self, plan_file):
+        p = plan_file("""\
+            ## Tasks
+
+            - [x] task one
+            - [ ] task two
+            - [x] task three
+        """)
+
+        task = find_most_recent_completed(p)
+
+        assert task is not None
+        assert task["text"] == "task three"
+        assert task["index"] > 0
+
+    def test_returns_none_when_no_completed_tasks_exist(self, plan_file):
+        p = plan_file("## Tasks\n\n- [ ] task one\n- [ ] task two\n")
+        assert find_most_recent_completed(p) is None
+
+    def test_reopens_most_recent_completed_task(self, plan_file, simulated_replace):
+        p = plan_file("""\
+            ## Tasks
+
+            - [x] task one
+            - [x] task two
+            - [ ] task three
+        """)
+
+        reopened = reopen_most_recent_completed(p)
+        tasks = load_tasks(p)
+
+        assert reopened["text"] == "task two"
+        assert reopened["done"] is False
+        assert [t["done"] for t in tasks] == [True, False, False]
+
+    def test_preserves_crlf_when_reopening_task(self, scratch_root, simulated_replace):
+        p = scratch_root / f"plan-{uuid.uuid4().hex}.md"
+        before = (
+            b"# Plan\r\n"
+            b"\r\n"
+            b"## Tasks\r\n"
+            b"\r\n"
+            b"- [x] first task\r\n"
+            b"- [x] second task\r\n"
+            b"\r\n"
+            b"## Notes\r\n"
+            b"\r\n"
+            b"Reference only.\r\n"
+        )
+        p.write_bytes(before)
+
+        reopened = reopen_most_recent_completed(p)
+        after = p.read_bytes()
+
+        assert reopened["text"] == "second task"
+        expected = before.replace(b"- [x] second task\r\n", b"- [ ] second task\r\n", 1)
+        assert after == expected
+        try:
+            p.unlink(missing_ok=True)
+        except PermissionError:
+            pass
+
+    def test_raises_when_reopen_has_no_completed_task(self, plan_file, simulated_replace):
+        p = plan_file("## Tasks\n\n- [ ] task one\n")
+        with pytest.raises(ValueError, match="No completed task"):
+            reopen_most_recent_completed(p)
+
+    def test_reopen_task_raises_for_non_done_line(self, plan_file, simulated_replace):
+        p = plan_file("## Tasks\n\n- [ ] task one\n")
+        task_index = load_tasks(p)[0]["index"]
+        with pytest.raises(ValueError, match="not a completed task"):
+            reopen_task(p, task_index)

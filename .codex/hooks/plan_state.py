@@ -85,6 +85,15 @@ def _iter_task_section(lines: list[str]):
             yield idx, line
 
 
+def _assert_task_index_in_range(lines: list[str], task_index: int) -> None:
+    if task_index < 0 or task_index >= len(lines):
+        raise ValueError(f"task_index {task_index} is out of range (file has {len(lines)} lines)")
+
+    task_lines = {idx for idx, _ in _iter_task_section(lines)}
+    if task_index not in task_lines:
+        raise ValueError(f"Line {task_index} is not inside the ## Tasks section.")
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -138,6 +147,14 @@ def find_first_pending(plan_path: Path) -> dict | None:
     return None
 
 
+def find_most_recent_completed(plan_path: Path) -> dict | None:
+    """Return the highest-index completed task, or *None* if none are completed."""
+    completed = [task for task in load_tasks(plan_path) if task["done"]]
+    if not completed:
+        return None
+    return max(completed, key=lambda task: task["index"])
+
+
 def mark_task_complete(plan_path: Path, task_index: int) -> None:
     """Mark the task at line *task_index* as complete in-place.
 
@@ -154,12 +171,7 @@ def mark_task_complete(plan_path: Path, task_index: int) -> None:
         ValueError: If the line at *task_index* is not a pending task line.
     """
     lines = _load_lines(plan_path)
-    if task_index < 0 or task_index >= len(lines):
-        raise ValueError(f"task_index {task_index} is out of range (file has {len(lines)} lines)")
-
-    task_lines = {idx for idx, _ in _iter_task_section(lines)}
-    if task_index not in task_lines:
-        raise ValueError(f"Line {task_index} is not inside the ## Tasks section.")
+    _assert_task_index_in_range(lines, task_index)
 
     line = lines[task_index]
     if not _is_pending(line):
@@ -169,3 +181,33 @@ def mark_task_complete(plan_path: Path, task_index: int) -> None:
         )
     lines[task_index] = _DONE_PREFIX + line[len(_PENDING_PREFIX):]
     _write_lines_atomic(plan_path, lines)
+
+
+def reopen_task(plan_path: Path, task_index: int) -> None:
+    """Reopen the completed task at line *task_index* by restoring ``- [ ] ``."""
+    lines = _load_lines(plan_path)
+    _assert_task_index_in_range(lines, task_index)
+
+    line = lines[task_index]
+    if not _is_done(line):
+        raise ValueError(
+            f"Line {task_index} is not a completed task line. "
+            f"Got: {line!r}"
+        )
+
+    lines[task_index] = _PENDING_PREFIX + line[len(_DONE_PREFIX):]
+    _write_lines_atomic(plan_path, lines)
+
+
+def reopen_most_recent_completed(plan_path: Path) -> dict:
+    """Reopen the highest-index completed task and return the reopened task metadata."""
+    latest = find_most_recent_completed(plan_path)
+    if latest is None:
+        raise ValueError("No completed task exists to reopen in the ## Tasks section.")
+
+    reopen_task(plan_path, latest["index"])
+    return {
+        "index": latest["index"],
+        "text": latest["text"],
+        "done": False,
+    }

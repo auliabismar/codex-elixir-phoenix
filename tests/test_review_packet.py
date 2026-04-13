@@ -40,6 +40,7 @@ def test_returns_verification_payload_when_verify_fails(mock_validate, repo_root
     assert packet["verification"]["success"] is False
     assert packet["verification"]["error_type"] == "compilation"
     assert packet["git_diff"] is None
+    assert packet["plan_binding"]["status"] == "no-target"
 
 
 @patch("review_packet.plan_compound._collect_git_diff")
@@ -59,6 +60,7 @@ def test_returns_packet_after_passing_verify(mock_validate, mock_collect_diff, r
     assert packet["git_diff"] == "diff --git a/lib/app.ex b/lib/app.ex"
     assert packet["source_diff_basis"] == "git diff HEAD plus added untracked source files"
     assert packet["verification"]["success"] is True
+    assert packet["plan_binding"]["status"] == "no-target"
 
 
 @patch("review_packet.plan_compound._collect_git_diff")
@@ -76,6 +78,7 @@ def test_fails_closed_when_git_is_unavailable(mock_validate, mock_collect_diff, 
     assert packet["ready"] is False
     assert packet["error_type"] == "git"
     assert "Git is required" in packet["message"]
+    assert packet["plan_binding"]["status"] == "no-target"
 
 
 @patch("review_packet.plan_compound._collect_git_diff")
@@ -95,3 +98,34 @@ def test_fails_closed_when_diff_is_empty(mock_validate, mock_collect_diff, repo_
     assert packet["ready"] is False
     assert packet["error_type"] == "empty-diff"
     assert "No meaningful diff" in packet["message"]
+    assert packet["plan_binding"]["status"] == "no-target"
+
+
+@patch("review_packet.review_enforcement.resolve_plan_binding")
+@patch("review_packet.plan_compound._collect_git_diff")
+@patch("review_packet.validate_compilation.validate_project")
+def test_forwards_review_target_for_plan_resolution(
+    mock_validate,
+    mock_collect_diff,
+    mock_resolve_plan_binding,
+    repo_root,
+):
+    mock_validate.return_value = {
+        "success": True,
+        "error_type": None,
+        "logs": None,
+    }
+    mock_collect_diff.return_value = "diff --git a/lib/app.ex b/lib/app.ex"
+    mock_resolve_plan_binding.return_value = {
+        "status": "resolved",
+        "error_type": None,
+        "message": None,
+        "plan_path": ".codex/plans/payments/plan.md",
+        "plan_slug": "payments",
+    }
+
+    packet = collect_review_packet(repo_root, target="payments")
+
+    mock_resolve_plan_binding.assert_called_once_with(repo_root, target="payments")
+    assert packet["plan_binding"]["status"] == "resolved"
+    assert packet["plan_binding"]["plan_slug"] == "payments"
