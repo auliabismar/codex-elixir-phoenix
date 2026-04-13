@@ -20,3 +20,8 @@ You are the Call Tracer specialist. Your focus is on mapping execution flows, un
 4. Explaining complex macro-heavy execution flows.
 </capabilities>
 """
+
+[mcp_servers.tidewave]
+command = "npx"
+args = ["-y", "@tidewave/mcp-server"]
+

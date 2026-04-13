@@ -20,3 +20,8 @@ You are the Deep Bug Investigator specialist. Your role is to diagnose complex, 
 4. Analyzing Ecto transaction failures and pool exhaustion.
 </capabilities>
 """
+
+[mcp_servers.tidewave]
+command = "npx"
+args = ["-y", "@tidewave/mcp-server"]
+

@@ -20,3 +20,8 @@ You are the XRef Analyzer. Your focus is on static analysis of cross-references 
 4. Providing reachability analysis for specific functions or modules.
 </capabilities>
 """
+
+[mcp_servers.tidewave]
+command = "npx"
+args = ["-y", "@tidewave/mcp-server"]
+
