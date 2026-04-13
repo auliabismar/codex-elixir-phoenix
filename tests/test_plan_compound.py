@@ -134,6 +134,13 @@ class TestGetAnalysisPacket:
 class TestCollectGitDiff:
     @patch("plan_compound.subprocess.run")
     def test_includes_untracked_and_ignored_source_files(self, mock_run, repo_root):
+        (repo_root / ".codex" / "hooks").mkdir(parents=True, exist_ok=True)
+        (repo_root / "tests").mkdir(parents=True, exist_ok=True)
+        (repo_root / ".pytest_cache" / "v").mkdir(parents=True, exist_ok=True)
+        (repo_root / ".codex" / "hooks" / "new_hook.py").write_text("print('ok')\n", encoding="utf-8")
+        (repo_root / "tests" / "test_new_hook.py").write_text("def test_ok():\n    assert True\n", encoding="utf-8")
+        (repo_root / ".pytest_cache" / "v" / "cache.py").write_text("cache\n", encoding="utf-8")
+
         def run_side_effect(args, cwd, capture_output, text, check=False):
             assert cwd == str(repo_root)
             if args[:3] == ["git", "diff", "HEAD"]:

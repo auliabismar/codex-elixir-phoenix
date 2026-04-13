@@ -28,4 +28,14 @@ When executing the Work phase:
 3. If `reference_block` is non-empty, prepend it to the specialist handoff so only matched manuals travel with the task.
 4. Spawn the specialist only after reference injection is complete, and treat the injected references as read-only context.
 </work-cycle>
+
+<review-cycle>
+When executing the Review phase:
+1. Build the review packet with `review_packet.collect_review_packet(repo_root)`.
+2. If packet `ready` is false, return the structured payload and stop without spawning reviewers.
+3. If packet `ready` is true, hand off the packet to `parallel-reviewer` for 4-domain fan-out.
+4. Require deterministic checklist synthesis through `review_aggregator.py`.
+5. Keep Story 5.2 boundary clean: review phase synthesizes findings only; do not perform
+   semantic rollback, completion-state reversal, or final Iron Law judgment in this phase.
+</review-cycle>
 """
